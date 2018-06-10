@@ -30,7 +30,7 @@ app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
 
 app.post('/authors', (request, response) => {
     var req = request.query;
-    connection.query('INSERT INTO `AUTHOR` (`lastname`, `firstname`) VALUES (?, ?)', [req.firstname, req.lastname
+    connection.query('INSERT INTO AUTHOR (lastname, firstname) VALUES (?, ?)', [req.firstname, req.lastname
     ], function (err, result) {
         if (err === null) {
             response.json(req);
@@ -76,8 +76,8 @@ app.delete('/authors/:id', (request, response) => {
 
 // Récupérer toutes les oeuvres d’art d’un auteur
 
-app.get('/authors/artworks/:id', (request, response) => {
-    connection.query(`SELECT translation_default_id from ARTWORK WHERE author_id=${request.params.id}`, function (err, result) {
+app.get('/authors/:id/artworks', (request, response) => {
+    connection.query(`SELECT * from ARTWORK as a inner join TRANSLATION as t on a.id = t.artwork_id where a.author_id = ${request.params.id}`, function (err, result) {
         if (err === null) {
             response.json(result);
         } else {
@@ -104,8 +104,15 @@ app.post('/artworks', (request, response) => {
 
 // Récupérer une oeuvre d'art
 
-app.get('/artworks/:id', (req, res) => {
-    res.json('bou');
+app.get('/artworks/:id', (request, response) => {
+    
+    connection.query(`SELECT * from ARTWORK as a inner join TRANSLATION as t on a.id = t.artwork_id where a.id = ${request.params.id}`, function (err, result) {
+        if (err === null) {
+            response.json(result);
+        } else {
+            response.json(err);
+        }
+    });
 })
 
 // Mise à jour une oeuvre d'art
@@ -130,12 +137,11 @@ app.delete('/artworks/:id', (request, response) => {
     });
 })
 
-
 ///////////////////////// ARTWORK TRANSLATION API //////////////////////////////////
 
 // Créer une traduction d’oeuvre d’art
 
-app.post('/artworks/translation', (request, response) => {
+app.post('/translation', (request, response) => {
     var req = request.query;
     connection.query('INSERT INTO TRANSLATION (artwork_id, lang, translation) VALUES (?, ?, ?)', [req.artwork_id, req.lang, req.translation
     ], function (err, result) {
@@ -149,7 +155,7 @@ app.post('/artworks/translation', (request, response) => {
 
 // Récupérer une traduction d’oeuvre d’art
 
-app.get('/artworks/translation/:id', (request, response) => {
+app.get('/translation/:id', (request, response) => {
     connection.query(`SELECT lang, translation from TRANSLATION WHERE id=${request.params.id}`, function (err, result) {
         if (err === null) {
             response.json(result);
@@ -161,7 +167,7 @@ app.get('/artworks/translation/:id', (request, response) => {
 
 // Metter à jour une traduction d’oeuvre d’art
 
-app.patch('/artworks/translation/:id', (request, response) => {
+app.patch('/translation/:id', (request, response) => {
     connection.query(`UPDATE TRANSLATION SET artwork_id='${request.query.artwork_id}', lang='${request.query.lang}', translation='${request.query.translation}' WHERE id=${request.params.id}`, function (err, result) {
         if (err === null)
             response.json(request.query);
@@ -172,7 +178,7 @@ app.patch('/artworks/translation/:id', (request, response) => {
 
 // Supprimer une traduction d’oeuvre d’art
 
-app.delete('/artworks/translation/:id', (request, response) => {
+app.delete('/translation/:id', (request, response) => {
     connection.query(`DELETE FROM TRANSLATION WHERE id=${request.params.id}`, function (err, result) {
         if (err === null)
             response.json(request.params.id);
@@ -180,7 +186,6 @@ app.delete('/artworks/translation/:id', (request, response) => {
             response.json(err);
     });
 })
-
 
 const port = process.env.PORT || 5000;
 
